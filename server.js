@@ -9,8 +9,41 @@ const QRCode = require('qrcode');
 const app = express();
 const PORT = 3000;
 
+// Configuration file path
+const configPath = path.join(__dirname, 'config.json');
+
+// Load or create configuration
+function loadConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const configData = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(configData);
+    }
+  } catch (error) {
+    console.error('Error loading config:', error);
+  }
+  
+  // Default configuration
+  return {
+    uploadsDir: path.join(__dirname, 'uploads')
+  };
+}
+
+// Save configuration
+function saveConfig(config) {
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error saving config:', error);
+    return false;
+  }
+}
+
+let config = loadConfig();
+let uploadsDir = config.uploadsDir;
+
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -110,6 +143,104 @@ app.get('/api/qrcode', async (req, res) => {
   } catch (error) {
     console.error('QR code generation error:', error);
     res.status(500).json({ error: 'Failed to generate QR code' });
+  }
+});
+
+// API endpoint to get current upload path
+app.get('/api/upload-path', (req, res) => {
+  res.json({
+    path: uploadsDir,
+    exists: fs.existsSync(uploadsDir)
+  });
+});
+
+// API endpoint to set upload path
+app.post('/api/upload-path', (req, res) => {
+  try {
+    const newPath = req.body.path;
+    
+    if (!newPath) {
+      return res.status(400).json({ error: 'Path is required' });
+    }
+
+    // Validate path exists
+    if (!fs.existsSync(newPath)) {
+      return res.status(400).json({ error: 'Path does not exist' });
+    }
+
+    // Validate it's a directory
+    const stats = fs.statSync(newPath);
+    if (!stats.isDirectory()) {
+      return res.status(400).json({ error: 'Path must be a directory' });
+    }
+
+    // Update configuration
+    config.uploadsDir = newPath;
+    uploadsDir = newPath;
+    
+    if (saveConfig(config)) {
+      res.json({ 
+        success: true, 
+        path: uploadsDir,
+        message: 'Upload path updated successfully'
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to save configuration' });
+    }
+  } catch (error) {
+    console.error('Error setting upload path:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API endpoint to browse directories
+app.post('/api/browse-directory', (req, res) => {
+  try {
+    const requestedPath = req.body.path || os.homedir();
+    
+    // Security: Prevent accessing system files outside user directories
+    const homedir = os.homedir();
+    const absolutePath = path.resolve(requestedPath);
+    
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(400).json({ error: 'Path does not exist' });
+    }
+
+    const stats = fs.statSync(absolutePath);
+    if (!stats.isDirectory()) {
+      return res.status(400).json({ error: 'Path is not a directory' });
+    }
+
+    // Read directory contents
+    const items = fs.readdirSync(absolutePath)
+      .filter(item => !item.startsWith('.')) // Hide hidden files
+      .map(item => {
+        const itemPath = path.join(absolutePath, item);
+        try {
+          const itemStats = fs.statSync(itemPath);
+          return {
+            name: item,
+            path: itemPath,
+            isDirectory: itemStats.isDirectory()
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(item => item !== null && item.isDirectory) // Only return directories
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    // Get parent directory
+    const parentPath = path.dirname(absolutePath);
+    
+    res.json({
+      currentPath: absolutePath,
+      parentPath: parentPath !== absolutePath ? parentPath : null,
+      directories: items
+    });
+  } catch (error) {
+    console.error('Error browsing directory:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

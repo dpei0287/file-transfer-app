@@ -1,4 +1,5 @@
 let selectedFiles = [];
+let currentBrowsePath = '';
 
 // DOM elements
 const uploadArea = document.getElementById('uploadArea');
@@ -17,6 +18,149 @@ const ipAddressEl = document.getElementById('ipAddress');
 const devicePrefixInput = document.getElementById('devicePrefix');
 const qrCodeImg = document.getElementById('qrCode');
 const qrLoadingText = document.getElementById('qrLoading');
+
+// Path selection elements
+const currentPathEl = document.getElementById('currentPath');
+const changePathBtn = document.getElementById('changePathBtn');
+const pathModal = document.getElementById('pathModal');
+const closeModalBtn = document.getElementById('closeModal');
+const cancelPathBtn = document.getElementById('cancelPathBtn');
+const selectPathBtn = document.getElementById('selectPathBtn');
+const breadcrumbEl = document.getElementById('breadcrumb');
+const directoryListEl = document.getElementById('directoryList');
+const customPathInput = document.getElementById('customPath');
+
+// Load current upload path
+async function loadUploadPath() {
+    try {
+        const response = await fetch('/api/upload-path');
+        const data = await response.json();
+        currentPathEl.textContent = data.path;
+        currentBrowsePath = data.path;
+    } catch (error) {
+        console.error('Failed to load upload path:', error);
+        currentPathEl.textContent = 'Error loading path';
+    }
+}
+
+// Open path selection modal
+changePathBtn.addEventListener('click', () => {
+    pathModal.style.display = 'flex';
+    browseDirectory(currentBrowsePath);
+});
+
+// Close modal
+function closeModal() {
+    pathModal.style.display = 'none';
+}
+
+closeModalBtn.addEventListener('click', closeModal);
+cancelPathBtn.addEventListener('click', closeModal);
+
+// Browse directory
+async function browseDirectory(dirPath) {
+    try {
+        directoryListEl.innerHTML = '<p class="loading">Loading directories...</p>';
+        
+        const response = await fetch('/api/browse-directory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: dirPath })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to browse directory');
+        }
+        
+        currentBrowsePath = data.currentPath;
+        breadcrumbEl.textContent = data.currentPath;
+        customPathInput.value = data.currentPath;
+        
+        // Build directory list
+        let html = '';
+        
+        // Add parent directory option
+        if (data.parentPath) {
+            html += `
+                <div class="directory-item parent" data-path="${data.parentPath}">
+                    <span class="directory-icon">⬆️</span>
+                    <span class="directory-name">..</span>
+                </div>
+            `;
+        }
+        
+        // Add subdirectories
+        data.directories.forEach(dir => {
+            html += `
+                <div class="directory-item" data-path="${dir.path}">
+                    <span class="directory-icon">📁</span>
+                    <span class="directory-name">${dir.name}</span>
+                </div>
+            `;
+        });
+        
+        if (data.directories.length === 0 && !data.parentPath) {
+            html = '<p class="loading">No subdirectories found</p>';
+        }
+        
+        directoryListEl.innerHTML = html;
+        
+        // Add click handlers
+        document.querySelectorAll('.directory-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const path = item.getAttribute('data-path');
+                browseDirectory(path);
+            });
+        });
+    } catch (error) {
+        console.error('Error browsing directory:', error);
+        directoryListEl.innerHTML = `<p class="loading" style="color: #ff4757;">${error.message}</p>`;
+    }
+}
+
+// Select path
+selectPathBtn.addEventListener('click', async () => {
+    const pathToSet = customPathInput.value.trim() || currentBrowsePath;
+    
+    if (!pathToSet) {
+        showMessage('❌ Please select or enter a valid path', 'error');
+        return;
+    }
+    
+    try {
+        selectPathBtn.disabled = true;
+        selectPathBtn.textContent = 'Setting...';
+        
+        const response = await fetch('/api/upload-path', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: pathToSet })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to set path');
+        }
+        
+        currentPathEl.textContent = data.path;
+        showMessage('✅ ' + data.message, 'success');
+        closeModal();
+        
+    } catch (error) {
+        console.error('Error setting path:', error);
+        showMessage('❌ Failed to set path: ' + error.message, 'error');
+    } finally {
+        selectPathBtn.disabled = false;
+        selectPathBtn.textContent = 'Select This Folder';
+    }
+});
 
 // Load server info
 async function loadServerInfo() {
@@ -271,6 +415,9 @@ loadServerInfo();
 
 // Load QR code on page load
 loadQRCode();
+
+// Load upload path on page load
+loadUploadPath();
 
 // Refresh stats every 30 seconds
 setInterval(loadStats, 30000);

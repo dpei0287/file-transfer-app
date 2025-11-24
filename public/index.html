@@ -26,6 +26,17 @@
             </div>
         </header>
 
+        <div class="settings-section">
+            <h3>⚙️ Settings</h3>
+            <div class="setting-item">
+                <label>Save Location:</label>
+                <div class="path-display">
+                    <span class="path-value" id="currentPath">Loading...</span>
+                    <button class="btn btn-small" id="changePathBtn">Change</button>
+                </div>
+            </div>
+        </div>
+
         <div class="device-name-section">
             <label for="devicePrefix">Device Name (optional):</label>
             <input 
@@ -63,6 +74,31 @@
         <div class="stats" id="stats"></div>
 
         <div class="message" id="message"></div>
+    </div>
+
+    <!-- Path Selection Modal -->
+    <div class="modal" id="pathModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📁 Select Save Location</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="path-breadcrumb">
+                    <span id="breadcrumb">Loading...</span>
+                </div>
+                <div class="directory-list" id="directoryList">
+                    <p class="loading">Loading directories...</p>
+                </div>
+                <div class="path-input-section">
+                    <input type="text" id="customPath" placeholder="Or enter path manually..." />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPathBtn">Cancel</button>
+                <button class="btn btn-primary" id="selectPathBtn">Select This Folder</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
