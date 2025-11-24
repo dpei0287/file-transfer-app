@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Diagnostics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .url-list {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .url-item {
+            background: #f8f9ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+
+        .copy-btn.copied {
+            background: #2ecc71;
+        }
+
+        .instruction {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .instruction strong {
+            color: #856404;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            display: block;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Server Diagnostics</h1>
+            <p>Connection troubleshooting information</p>
+        </header>
+
+        <div class="card">
+            <h2>📊 Server Status</h2>
+            <div id="diagnostics" class="loading">Loading diagnostics...</div>
+        </div>
+
+        <div class="card">
+            <h2>📱 Connection Instructions</h2>
+            <div class="instruction">
+                <strong>To connect from your iPhone:</strong>
+                <ol style="margin-top: 10px; margin-left: 20px;">
+                    <li>Make sure your iPhone is on the same WiFi network</li>
+                    <li>Copy one of the URLs above</li>
+                    <li>Open Safari on your iPhone</li>
+                    <li>Paste the URL and press Go</li>
+                </ol>
+            </div>
+            <div class="instruction" style="margin-top: 15px;">
+                <strong>Not working?</strong><br>
+                See the <a href="https://github.com/dpei0287/file-transfer-app/blob/main/TROUBLESHOOTING.md" target="_blank">complete troubleshooting guide</a>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadDiagnostics()">🔄 Refresh Diagnostics</button>
+    </div>
+
+    <script>
+        async function loadDiagnostics() {
+            const container = document.getElementById('diagnostics');
+            container.innerHTML = '<p class="loading">Loading...</p>';
+
+            try {
+                const response = await fetch('/api/diagnostics');
+                const data = await response.json();
+
+                let html = `
+                    <div class="info-row">
+                        <span class="label">Status:</span>
+                        <span class="status success">✅ ${data.serverStatus.toUpperCase()}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Platform:</span>
+                        <span class="value">${data.platform}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Hostname:</span>
+                        <span class="value">${data.hostname}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Primary IP:</span>
+                        <span class="value">${data.primaryIP}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Port:</span>
+                        <span class="value">${data.port}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Node Version:</span>
+                        <span class="value">${data.nodeVersion}</span>
+                    </div>
+                `;
+
+                // Add network interfaces
+                if (data.allNetworkInterfaces.length > 0) {
+                    html += `
+                        <div style="margin-top: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 10px;">🌐 Available URLs (Try These):</h3>
+                    `;
+
+                    data.urls.forEach((url, index) => {
+                        html += `
+                            <div class="url-item">
+                                <span>${url}</span>
+                                <button class="copy-btn" onclick="copyUrl('${url}', this)">Copy</button>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                }
+
+                // Add network interfaces details
+                html += `
+                    <div style="margin-top: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 10px;">🔌 Network Interfaces:</h3>
+                `;
+
+                data.allNetworkInterfaces.forEach(iface => {
+                    html += `
+                        <div class="info-row">
+                            <span class="label">${iface.interface}:</span>
+                            <span class="value">${iface.address} (${iface.netmask})</span>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                container.innerHTML = `<p style="color: #ff4757;">Error loading diagnostics: ${error.message}</p>`;
+            }
+        }
+
+        function copyUrl(url, button) {
+            navigator.clipboard.writeText(url).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        // Load diagnostics on page load
+        loadDiagnostics();
+    </script>
+</body>
+</html>
