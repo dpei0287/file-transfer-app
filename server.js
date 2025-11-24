@@ -288,7 +288,40 @@ app.post('/upload', upload.array('files', 50), async (req, res) => {
     const devicePrefix = req.body.devicePrefix || '';
 
     const results = [];
+    
+    // Track Live Photos for reporting (but don't create subfolders)
+    const livePhotoGroups = new Map();
+    
+    // Detect Live Photo pairs
+    for (const file of req.files) {
+      const baseName = path.basename(file.originalname, path.extname(file.originalname));
+      const ext = path.extname(file.originalname).toLowerCase();
+      
+      // Check if this file has a matching pair (image + video with same name)
+      const hasPair = req.files.some(f => {
+        const fBaseName = path.basename(f.originalname, path.extname(f.originalname));
+        const fExt = path.extname(f.originalname).toLowerCase();
+        
+        if (fBaseName !== baseName || f === file) return false;
+        
+        // Image has video pair or video has image pair
+        const isImageWithVideo = ['.heic', '.heif', '.jpg', '.jpeg'].includes(ext) && 
+                                  ['.mov', '.mp4'].includes(fExt);
+        const isVideoWithImage = ['.mov', '.mp4'].includes(ext) && 
+                                  ['.heic', '.heif', '.jpg', '.jpeg'].includes(fExt);
+        
+        return isImageWithVideo || isVideoWithImage;
+      });
+      
+      if (hasPair) {
+        if (!livePhotoGroups.has(baseName)) {
+          livePhotoGroups.set(baseName, []);
+        }
+        livePhotoGroups.get(baseName).push(file.originalname);
+      }
+    }
 
+    // Process all files (Live Photos and regular files together)
     for (const file of req.files) {
       try {
         // Get creation date
@@ -304,7 +337,7 @@ app.post('/upload', upload.array('files', 50), async (req, res) => {
           fs.mkdirSync(dateFolderPath, { recursive: true });
         }
 
-        // Move file to date folder
+        // Move file directly to date folder (no subfolders)
         const newPath = path.join(dateFolderPath, file.filename);
         fs.renameSync(file.path, newPath);
 
@@ -327,7 +360,9 @@ app.post('/upload', upload.array('files', 50), async (req, res) => {
     res.json({
       success: true,
       filesProcessed: results.length,
-      files: results
+      files: results,
+      livePhotosCount: livePhotoGroups.size,
+      regularFilesCount: results.length - (livePhotoGroups.size * 2)
     });
   } catch (error) {
     console.error('Upload error:', error);

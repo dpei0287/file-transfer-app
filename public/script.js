@@ -314,7 +314,13 @@ uploadBtn.addEventListener('click', async () => {
         xhr.addEventListener('load', () => {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
-                showMessage(`✅ Successfully uploaded ${response.filesProcessed} file(s)!`, 'success');
+                
+                let successMsg = `✅ Successfully uploaded ${response.filesProcessed} item(s)!`;
+                if (response.livePhotosCount > 0) {
+                    successMsg += ` (Including ${response.livePhotosCount} Live Photo${response.livePhotosCount > 1 ? 's' : ''})`;
+                }
+                
+                showMessage(successMsg, 'success');
                 
                 // Reset
                 selectedFiles = [];

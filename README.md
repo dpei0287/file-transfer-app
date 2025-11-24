@@ -11,7 +11,8 @@ Transfer photos and videos from your iPhone to your laptop over your local WiFi 
 ## ✨ Features
 
 - 📤 Upload photos and videos from iPhone to laptop
-- 📁 Automatic organization by creation date (YYYY-MM-DD folders)
+- � **Live Photos support** - both image and video components transferred
+- �📁 Automatic organization by creation date (YYYY-MM-DD folders)
 - 🎯 Custom save location - choose where files are stored
 - 📱 QR code scanning for instant connection
 - 🏷️ Device name prefix support (organize by phone)
@@ -21,6 +22,7 @@ Transfer photos and videos from your iPhone to your laptop over your local WiFi 
 - 🚀 No internet required - works on local network only
 - 💾 Supports large files (up to 500MB per file)
 - 📷 Extracts EXIF data from photos for accurate dating
+- 🔄 Original quality - no compression or resizing
 
 ## 🚀 Quick Start
 
@@ -69,19 +71,32 @@ Connect from your iPhone using the Network URL
 
 ## 📂 File Organization
 
-Files are saved in the `uploads` folder, organized by the date they were created:
+Files are saved in your chosen upload folder, organized by the date they were created:
 
 ```
 uploads/
 ├── 2024-11-20/
-│   ├── IMG_1234.jpg
-│   └── VID_5678.mov
+│   ├── timestamp-IMG_1234.HEIC
+│   ├── timestamp-IMG_1234.MOV    (Live Photo video component)
+│   ├── timestamp-VID_5678.mov
+│   └── timestamp-IMG_1235.jpg
 ├── 2024-11-21/
-│   ├── IMG_2345.jpg
-│   └── IMG_2346.jpg
+│   ├── timestamp-IMG_2345.jpg
+│   └── timestamp-IMG_2346.jpg
 └── 2024-11-22/
-    └── VID_6789.mov
+    └── timestamp-VID_6789.mov
 ```
+
+### 📸 Live Photos
+
+Live Photos are automatically detected and both components are saved:
+- The still image (.HEIC or .JPEG) and video (.MOV) are kept in the same date folder
+- Files with matching names (e.g., IMG_1234.HEIC + IMG_1234.MOV) are recognized as Live Photos
+- Both files maintain their original quality and EXIF data
+- Easy to identify by matching filenames
+
+**Example:**
+- `IMG_1234.HEIC` + `IMG_1234.MOV` → Both saved in `2024-11-24/` folder
 
 ## 🔧 Configuration
 
@@ -124,7 +139,9 @@ npm run dev
 1. **Add to Home Screen**: In Safari, tap the share button and select "Add to Home Screen" for quick access
 2. **Camera Access**: When selecting files, tap "Photo Library" to access existing photos, or "Take Photo" to capture new ones
 3. **Multiple Files**: You can select multiple files at once by tapping multiple photos in the selection screen
-4. **Background Upload**: The upload will continue even if you switch apps (but don't close Safari completely)
+4. **Live Photos**: When selecting Live Photos, make sure to select them from the main photo library (they appear with the "LIVE" badge)
+5. **Background Upload**: The upload will continue even if you switch apps (but don't close Safari completely)
+6. **File Formats**: All iPhone formats supported - HEIC, JPEG, MOV, MP4, and Live Photos
 
 ## 🔒 Security Notes
 
