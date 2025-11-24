@@ -244,6 +244,39 @@ app.post('/api/browse-directory', (req, res) => {
   }
 });
 
+// Diagnostic endpoint for troubleshooting
+app.get('/api/diagnostics', (req, res) => {
+  const localIp = getLocalIpAddress();
+  const networkInterfaces = os.networkInterfaces();
+  
+  // Get all network interfaces
+  const allIPs = [];
+  for (const name of Object.keys(networkInterfaces)) {
+    for (const iface of networkInterfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        allIPs.push({
+          interface: name,
+          address: iface.address,
+          netmask: iface.netmask
+        });
+      }
+    }
+  }
+  
+  res.json({
+    serverStatus: 'running',
+    platform: os.platform(),
+    hostname: os.hostname(),
+    primaryIP: localIp,
+    port: PORT,
+    allNetworkInterfaces: allIPs,
+    nodeVersion: process.version,
+    uploadsDirectory: uploadsDir,
+    timestamp: new Date().toISOString(),
+    urls: allIPs.map(ip => `http://${ip.address}:${PORT}`)
+  });
+});
+
 // Upload endpoint
 app.post('/upload', upload.array('files', 50), async (req, res) => {
   try {

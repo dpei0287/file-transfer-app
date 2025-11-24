@@ -2,10 +2,19 @@
 
 Transfer photos and videos from your iPhone to your laptop over your local WiFi network - **no internet data usage!**
 
+## 📖 Documentation
+
+- **[Windows Setup Guide](./WINDOWS_SETUP.md)** - Complete guide for Windows users
+- **[Troubleshooting Guide](./TROUBLESHOOTING.md)** - Fix connection issues
+- **[Diagnostics Page](http://localhost:3000/diagnostics.html)** - Check server status (when running)
+
 ## ✨ Features
 
 - 📤 Upload photos and videos from iPhone to laptop
 - 📁 Automatic organization by creation date (YYYY-MM-DD folders)
+- 🎯 Custom save location - choose where files are stored
+- 📱 QR code scanning for instant connection
+- 🏷️ Device name prefix support (organize by phone)
 - 📊 Real-time upload progress tracking
 - 📈 Statistics showing uploaded files by date
 - 🎨 Mobile-optimized interface
@@ -126,12 +135,56 @@ npm run dev
 
 ## 🐛 Troubleshooting
 
-### Can't connect from iPhone?
+### 🔍 Quick Diagnostics
+
+Visit the diagnostics page for detailed server information:
+- Open `http://localhost:3000/diagnostics.html` on your server computer
+- See all available network URLs
+- Copy and test different IP addresses
+- Check server status and configuration
+
+### Can't connect from iPhone or another device?
+
+**Windows PC Issues (Most Common):**
+
+1. **Windows Firewall Blocking** ⚠️ #1 Issue
+   - Press `Win + R`, type `wf.msc`, press Enter
+   - Click "Inbound Rules" → "New Rule"
+   - Select "Program" → Browse to `C:\Program Files\nodejs\node.exe`
+   - Allow the connection → Finish
+   
+   OR use Command Prompt (as Administrator):
+   ```cmd
+   netsh advfirewall firewall add rule name="File Transfer App" dir=in action=allow protocol=TCP localport=3000
+   ```
+
+2. **Check Network Profile**
+   - Settings → Network & Internet → WiFi
+   - Click your network → Set to "Private" (not Public)
+
+3. **Find Your IP Address**
+   ```cmd
+   ipconfig
+   ```
+   Look for "Wireless LAN adapter Wi-Fi" → "IPv4 Address"
+
+**macOS Issues:**
 
 1. Verify both devices are on the same WiFi network
-2. Check your laptop's firewall settings - it may be blocking port 3000
+2. Check your Mac's firewall settings - it may be blocking port 3000
+   - System Settings → Network → Firewall → Allow Node.js
 3. Try disabling VPN on either device
 4. Make sure the server is running (`npm start`)
+
+**For Complete Troubleshooting Guide:**
+
+See **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** for comprehensive step-by-step solutions including:
+- Windows Firewall configuration
+- Network connectivity tests
+- Router AP Isolation issues
+- VPN and antivirus conflicts
+- Ping tests and diagnostics
+- Common error messages
 
 ### Files not organizing by date?
 
