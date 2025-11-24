@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>File Transfer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 📷 File Transfer</h1>
+            <p class="subtitle">Upload photos & videos to your laptop</p>
+            <div class="server-info" id="serverInfo">
+                <div class="qr-section">
+                    <div class="qr-code-container">
+                        <img id="qrCode" src="" alt="QR Code" style="display: none;">
+                        <p class="qr-loading" id="qrLoading">Loading QR Code...</p>
+                    </div>
+                    <p class="qr-instruction">📷 Scan with your iPhone camera</p>
+                </div>
+                <div class="ip-address">
+                    <span class="label">Server Address:</span>
+                    <span class="value" id="ipAddress">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="device-name-section">
+            <label for="devicePrefix">Device Name (optional):</label>
+            <input 
+                type="text" 
+                id="devicePrefix" 
+                placeholder="e.g., iPhone13, MyPhone" 
+                maxlength="30"
+            >
+            <p class="help-text">Files will be saved in folders like: 2024-11-24-iPhone13</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <h2>Tap to Select Files</h2>
+            <p>or drag and drop here</p>
+            <input type="file" id="fileInput" multiple accept="image/*,video/*">
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="upload-controls" id="uploadControls" style="display: none;">
+            <button class="btn btn-primary" id="uploadBtn">
+                Upload <span id="fileCount"></span> File(s)
+            </button>
+            <button class="btn btn-secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Uploading...</p>
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
